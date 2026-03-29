@@ -1,0 +1,43 @@
+name: Video Automation v2
+
+on:
+  schedule:
+    # 2 günde bir TSİ 23:00 = UTC 20:00
+    - cron: '0 20 */2 * *'
+  workflow_dispatch:
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update && sudo apt-get install -y imagemagick
+          sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml
+
+      - name: Install Dependencies
+        run: |
+          pip install moviepy edge-tts google-api-python-client google-auth-oauthlib requests huggingface_hub
+
+      - name: Run Automation
+        env:
+          HF_REPO_ID: ${{ secrets.HF_REPO_ID }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          YT_TOKEN_DATA: ${{ secrets.YT_TOKEN_DATA }}
+        run: python main.py
+
+      - name: Commit and Push Index
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add current_index.txt
+          git commit -m "Video #$(cat current_index.txt) uploaded & index updated"
+          git push
