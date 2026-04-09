@@ -1,0 +1,6 @@
+moviepy>=2.0.0
+edge-tts
+google-api-python-client
+google-auth-oauthlib
+requests
+huggingface_hub
